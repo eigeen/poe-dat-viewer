@@ -127,7 +127,12 @@ function importHeaders (
   const headers = [] as NamedHeader[]
 
   const validFor = getValidFor(config)
-  const sch = schema.tables.find(s => s.name === name && (s.validFor & validFor))!
+  const foundByName = schema.tables.filter(s => s.name === name)
+  const sch = foundByName.find(s => s.validFor & validFor) ?? foundByName.at(0)
+  if (!sch) {
+    throw new Error(`No schema for "${name}" found.`)
+  }
+
   let offset = 0
   for (const column of sch.columns) {
     headers.push({
