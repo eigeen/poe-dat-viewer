@@ -16,14 +16,14 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, inject } from 'vue'
-import type { BundleLoader } from '@/app/patchcdn/cache.js'
+import { defineComponent, inject, computed } from 'vue'
+import { WorkbenchRuntime } from './runtime.js'
 
 export default defineComponent({
   setup () {
-    const loader = inject<BundleLoader>('bundle-loader')!
+    const runtime = inject<WorkbenchRuntime>('workbench-runtime')!
     return {
-      progress: loader.progress
+      progress: computed(() => runtime.currentSource.value.progress.value)
     }
   }
 })

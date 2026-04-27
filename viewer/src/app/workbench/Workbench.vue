@@ -15,7 +15,10 @@
         >The viewer is ready to fulfill your wishes 👾</div>
     </div>
     <div class="app-footer">
-      <div>Made by Alexander Drozdov, {{ appVersion.slice(0, 7) }} · <a class="q-link text-white border-b" href="https://github.com/SnosMe/poe-dat-viewer">GitHub</a></div>
+      <div class="truncate">
+        <span class="mr-4">Mode: {{ modeLabel }}<template v-if="sourceDetails"> · {{ sourceDetails }}</template><template v-if="isLocalReadonly"> · read-only</template></span>
+        <span>Made by Alexander Drozdov, {{ appVersion.slice(0, 7) }} · <a class="q-link text-white border-b" href="https://github.com/SnosMe/poe-dat-viewer">GitHub</a></span>
+      </div>
       <a href="https://discord.gg/SJjBdT3" class="flex ml-8"><img src="@/assets/discord-badge.svg" /></a>
     </div>
   </div>
@@ -28,20 +31,17 @@ import ViewerTabs from './Tabs.vue'
 import IndexTree from './IndexTree.vue'
 import DownloadProgress from './DownloadProgress.vue'
 import { tabs, activeTabId } from './workbench-core.js'
-import { BundleLoader } from '@/app/patchcdn/cache.js'
-import { BundleIndex } from '@/app/patchcdn/index-store.js'
-import { DatSchemasDatabase } from '@/app/dat-viewer/db.js'
+import { WorkbenchRuntime } from './runtime.js'
 
 export default defineComponent({
   name: 'AppWorkbench',
   components: { IndexTree, ViewerTabs, DownloadProgress },
   setup () {
-    const loader = new BundleLoader()
-    const index = new BundleIndex(loader)
-    const schemaDb = new DatSchemasDatabase(index)
-    provide('bundle-loader', loader)
-    provide('bundle-index', index)
-    provide('dat-schemas', schemaDb)
+    const runtime = new WorkbenchRuntime()
+    void runtime.init()
+    provide('workbench-runtime', runtime)
+    provide('bundle-index', runtime.index)
+    provide('dat-schemas', runtime.schemas)
 
     const activeTab = computed(() =>
       tabs.value.find(tab => tab.id === activeTabId.value)
@@ -49,6 +49,11 @@ export default defineComponent({
 
     return {
       activeTab,
+      runtime,
+      modeLabel: computed(() => runtime.modeLabel.value),
+      sourceDetails: computed(() => runtime.sourceDetails.value),
+      isLocalReadonly: computed(() =>
+        runtime.mode.value === 'local-directory' && !runtime.localCanWrite.value),
       appVersion: import.meta.env.APP_VERSION
     }
   }

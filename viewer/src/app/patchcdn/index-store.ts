@@ -1,12 +1,12 @@
 import { shallowRef, watch } from 'vue'
 import { getDirContent, getRootDirs, getFileInfo, readIndexBundle } from 'pathofexile-dat/bundles.js'
 import { decompressBundle, decompressFileInBundle, getBatchFileInfo } from '../worker/interface.js'
-import type { BundleLoader } from './cache.js'
+import type { BundleSource } from '../sources/bundle-source.js'
 import * as perf from '@/perf.js'
 
 export class BundleIndex {
   constructor (
-    public readonly loader: BundleLoader
+    private source: BundleSource
   ) {}
 
   private readonly index = shallowRef(null as {
@@ -20,8 +20,18 @@ export class BundleIndex {
     return this.index.value != null
   }
 
+  get currentSource () {
+    return this.source
+  }
+
+  setSource (source: BundleSource) {
+    if (this.source === source) return
+    this.source = source
+    this.index.value = null
+  }
+
   async loadIndex () {
-    const indexBin = await this.loader.fetchFile('_.index.bin')
+    const indexBin = await this.source.fetchFile('_.index.bin')
     const { slice: indexBundle } = await decompressBundle(indexBin)
     const _index = readIndexBundle(indexBundle)
     const { slice: pathReps } = await decompressBundle(_index.pathRepsBundle.slice().buffer)
@@ -37,7 +47,7 @@ export class BundleIndex {
     const { bundlesInfo, filesInfo } = this.index.value!
     const location = getFileInfo(fullPath, bundlesInfo, filesInfo)
     if (!location) throw new Error('never')
-    const bundleBin = await this.loader.fetchFile(location.bundle)
+    const bundleBin = await this.source.fetchFile(location.bundle)
 
     const { slice } = await decompressFileInBundle(bundleBin.slice(0), location.offset, location.size)
     return slice

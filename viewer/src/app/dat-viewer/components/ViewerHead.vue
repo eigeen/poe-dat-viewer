@@ -145,6 +145,7 @@ export default defineComponent({
     }
 
     function handleHeaderWheel (offset: number, e: WheelEvent) {
+      if (!db.canSaveHeaders) return
       e.preventDefault()
       const header = viewer.headers.value.find(h => h.offset === offset)!
       if (header.textLength != null) {

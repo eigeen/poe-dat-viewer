@@ -6,6 +6,7 @@
       </template>
       <template v-else-if="selections.length === 1">
         <button class="hover:bg-gray-300 hover:text-black px-1.5 flex gap-x-1 items-center"
+          :disabled="!canSaveHeaders"
           @click="defineColumn"><i class="codicon codicon-add"></i> Define column</button>
       </template>
       <template v-else-if="selections.length > 1">
@@ -22,7 +23,8 @@
         @click="rowSorting = null"
         >Clear sorting</button>
       <button
-        class="hover:bg-gray-300 hover:text-black px-1.5 flex gap-x-1 items-center"
+        class="hover:bg-gray-300 hover:text-black px-1.5 flex gap-x-1 items-center disabled:opacity-50 disabled:cursor-not-allowed"
+        :disabled="!canSaveHeaders"
         @click="restoreSchema"
         ><i class="codicon codicon-discard" /> Restore schema</button>
       <button
@@ -95,6 +97,7 @@ export default defineComponent({
 
     return {
       rowSorting: viewer.rowSorting,
+      canSaveHeaders: computed(() => db.canSaveHeaders),
       selections,
       defineColumn,
       exportDataJson,

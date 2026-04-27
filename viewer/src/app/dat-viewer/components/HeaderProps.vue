@@ -13,78 +13,83 @@
         <div>{{ header.length }} bytes of unidentified data</div>
       </div>
       <div v-else class="p-4 overflow-auto">
-        <div class="mb-4">
-          <label for="datv-header-name">Name</label>
-          <input id="datv-header-name" placeholder="Unnamed" v-model.trim="header.name"
-            class="border p-1 mt-1 w-full focus:border-blue-500" spellcheck="false">
+        <div v-if="!canEditSchema" class="mb-4 rounded border border-amber-300 bg-amber-50 px-3 py-2 text-amber-800">
+          Local workspace is read-only, so schema changes are disabled.
         </div>
-        <div class="mb-4 flex items-baseline">
-          <div class="mr-2">View mode</div>
-          <div class="gap-x-px flex">
-            <button v-for="opt in viewModeOpts" :key="opt.value"
-              class="px-2"
-              :class="(byteViewMode === opt.value) ? 'bg-blue-600 text-white' : 'bg-gray-100 hover:bg-gray-300'"
-              @click="byteViewMode = opt.value"
-              :disabled="opt.disabled"
-              v-text="opt.label" />
+        <fieldset :disabled="!canEditSchema">
+          <div class="mb-4">
+            <label for="datv-header-name">Name</label>
+            <input id="datv-header-name" placeholder="Unnamed" v-model.trim="header.name"
+              class="border p-1 mt-1 w-full focus:border-blue-500" spellcheck="false">
           </div>
-        </div>
-        <div class="mb-4">
-          <div class="mb-2 flex justify-between items-baseline">
-            <span>Data type</span>
-            <button class="text-red-700 bg-red-100 px-2"
-             @click="remove">Delete</button>
-          </div>
-          <div>
-            <div v-for="opt in dataTypeOpts" :key="opt.value" class="mb-0.5">
-              <label class="inline-flex items-center">
-                <input type="radio" v-model="dataType" :value="opt.value">
-                <span class="ml-2 cursor-pointer">{{ opt.label }}</span>
-              </label>
+          <div class="mb-4 flex items-baseline">
+            <div class="mr-2">View mode</div>
+            <div class="gap-x-px flex">
+              <button v-for="opt in viewModeOpts" :key="opt.value"
+                class="px-2"
+                :class="(byteViewMode === opt.value) ? 'bg-blue-600 text-white' : 'bg-gray-100 hover:bg-gray-300'"
+                @click="byteViewMode = opt.value"
+                :disabled="opt.disabled"
+                v-text="opt.label" />
             </div>
-            <div v-if="arrayTypeOpts.length" class="mt-3">
-              <div class="mb-1">of ...</div>
-              <div v-for="opt in arrayTypeOpts" :key="opt.value" class="mb-0.5">
+          </div>
+          <div class="mb-4">
+            <div class="mb-2 flex justify-between items-baseline">
+              <span>Data type</span>
+              <button class="text-red-700 bg-red-100 px-2"
+               @click="remove">Delete</button>
+            </div>
+            <div>
+              <div v-for="opt in dataTypeOpts" :key="opt.value" class="mb-0.5">
                 <label class="inline-flex items-center">
-                  <input type="radio" v-model="arrayType" :value="opt.value">
+                  <input type="radio" v-model="dataType" :value="opt.value">
                   <span class="ml-2 cursor-pointer">{{ opt.label }}</span>
                 </label>
               </div>
+              <div v-if="arrayTypeOpts.length" class="mt-3">
+                <div class="mb-1">of ...</div>
+                <div v-for="opt in arrayTypeOpts" :key="opt.value" class="mb-0.5">
+                  <label class="inline-flex items-center">
+                    <input type="radio" v-model="arrayType" :value="opt.value">
+                    <span class="ml-2 cursor-pointer">{{ opt.label }}</span>
+                  </label>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-        <div class="mb-4" v-if="header.type.integer">
-          <label class="inline-flex items-center">
-            <input type="checkbox" v-model="header.type.integer.unsigned">
-            <span class="ml-2 cursor-pointer">Unsigned</span>
-          </label>
-        </div>
-        <div class="mb-4" v-if="header.type.key">
-          <label for="datv-header-key-table">Table</label>
-          <select id="datv-header-key-table" class="border mt-1 w-full focus:border-blue-500"
-            :disabled="tablesPreloadNeeded()"
-            v-model="header.type.key.table">
-            <option v-for="opt of keyTableOpts" :key="opt.label"
-              :value="opt.value">{{ opt.label }}</option>
-          </select>
-          <div v-if="tablesPreloadNeeded()" class="italic mt-2">(pre-load all Data Tables to change)</div>
-        </div>
-        <hr class="my-6">
-        <div class="mb-4" v-if="keyDisplayColumnOpts.length">
-          <label for="datv-header-key-column">Display Column</label>
-          <select id="datv-header-key-column" class="border mt-1 w-full focus:border-blue-500"
-            v-model="header.type.key!.viewColumn">
-            <option v-for="opt of keyDisplayColumnOpts" :key="opt.label"
-              :value="opt.value">{{ opt.label }}</option>
-          </select>
-        </div>
-        <div class="mb-4" v-if="dataType">
-          <label class="mr-4">Width</label>
-          <input v-model.number="header.textLength"
-            class="border w-16 text-center"> chars
-          <div class="italic mt-2">(move mouse over the column name in Viewer and use `ScrollWheel`,
-            hold `Ctrl` to increase resize step)</div>
-        </div>
+          <div class="mb-4" v-if="header.type.integer">
+            <label class="inline-flex items-center">
+              <input type="checkbox" v-model="header.type.integer.unsigned">
+              <span class="ml-2 cursor-pointer">Unsigned</span>
+            </label>
+          </div>
+          <div class="mb-4" v-if="header.type.key">
+            <label for="datv-header-key-table">Table</label>
+            <select id="datv-header-key-table" class="border mt-1 w-full focus:border-blue-500"
+              :disabled="tablesPreloadNeeded()"
+              v-model="header.type.key.table">
+              <option v-for="opt of keyTableOpts" :key="opt.label"
+                :value="opt.value">{{ opt.label }}</option>
+            </select>
+            <div v-if="tablesPreloadNeeded()" class="italic mt-2">(pre-load all Data Tables to change)</div>
+          </div>
+          <hr class="my-6">
+          <div class="mb-4" v-if="keyDisplayColumnOpts.length">
+            <label for="datv-header-key-column">Display Column</label>
+            <select id="datv-header-key-column" class="border mt-1 w-full focus:border-blue-500"
+              v-model="header.type.key!.viewColumn">
+              <option v-for="opt of keyDisplayColumnOpts" :key="opt.label"
+                :value="opt.value">{{ opt.label }}</option>
+            </select>
+          </div>
+          <div class="mb-4" v-if="dataType">
+            <label class="mr-4">Width</label>
+            <input v-model.number="header.textLength"
+              class="border w-16 text-center"> chars
+            <div class="italic mt-2">(move mouse over the column name in Viewer and use `ScrollWheel`,
+              hold `Ctrl` to increase resize step)</div>
+          </div>
+        </fieldset>
       </div>
     </div>
   </div>
@@ -389,6 +394,7 @@ export default defineComponent({
     }
 
     return {
+      canEditSchema: computed(() => db.canSaveHeaders),
       isVisible: computed(() => viewer.editHeader.value != null),
       HEADERS_HEIGHT,
       header: headerRef,

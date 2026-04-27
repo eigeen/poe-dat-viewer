@@ -69,3 +69,15 @@ export function closeTab (id: string) {
 export function hasTabId (id: string) {
   return tabs.value.some(tab => tab.id === id)
 }
+
+export function resetTabsToImport () {
+  for (const tab of tabs.value) {
+    if (tab.id !== 'poe-dat-viewer@import') {
+      tab.kaScope.stop()
+    }
+  }
+
+  tabs.value = tabs.value.filter(tab => tab.id === 'poe-dat-viewer@import')
+  setActiveTab('poe-dat-viewer@import')
+  triggerRef(tabs)
+}
